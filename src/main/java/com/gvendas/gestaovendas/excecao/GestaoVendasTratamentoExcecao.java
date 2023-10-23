@@ -23,8 +23,10 @@ public class GestaoVendasTratamentoExcecao extends ResponseEntityExceptionHandle
     public static final String CONSTANT_VALIDATION_NOT_NOT_BLANK = "NotBlank";
     public static final String CONSTANT_VALIDATION_NOT_NOT_NULL = "NotNull";
     public static final String CONSTANT_VALIDATION_LENGTH = "Length";
-
     public static final String CONSTANT_VALIDATION_PARTTERN = "Pattern";
+
+    public static final String CONSTANT_VALIDATION_MIN = "Min";
+
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
@@ -87,6 +89,11 @@ public class GestaoVendasTratamentoExcecao extends ResponseEntityExceptionHandle
         if(fieldError.getCode().equals(CONSTANT_VALIDATION_PARTTERN)) {
             return fieldError.getDefaultMessage().concat(" formato inválido");
         }
+
+        if(fieldError.getCode().equals(CONSTANT_VALIDATION_MIN)) {
+            return fieldError.getDefaultMessage().concat(String.format(" deve ser maior ou igual a %s", fieldError.getArguments()[1]));
+        }
+
         return fieldError.toString();
     }
 }

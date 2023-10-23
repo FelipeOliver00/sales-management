@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @Api(tags = "Venda")
 @RestController
 @RequestMapping("/venda")
@@ -32,7 +34,7 @@ public class VendaControlador {
 
     @ApiOperation(value = "Registrar venda", nickname = "listarVendaPorCodigo")
     @PostMapping("/cliente/{codigoCliente}")
-    public ResponseEntity<ClienteVendaResponseDTO> salvar(@PathVariable Long codigoCliente, @RequestBody VendaRequestDTO vendaDto) {
+    public ResponseEntity<ClienteVendaResponseDTO> salvar(@PathVariable Long codigoCliente, @Valid @RequestBody VendaRequestDTO vendaDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(vendaServico.salvar(codigoCliente, vendaDto));
     }
 
