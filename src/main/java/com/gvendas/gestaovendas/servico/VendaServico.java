@@ -1,10 +1,9 @@
 package com.gvendas.gestaovendas.servico;
 
-import com.gvendas.gestaovendas.dto.venda.ClienteVendaResponseDTO;
-import com.gvendas.gestaovendas.dto.venda.ItemVendaResponseDTO;
-import com.gvendas.gestaovendas.dto.venda.VendaResponseDTO;
+import com.gvendas.gestaovendas.dto.venda.*;
 import com.gvendas.gestaovendas.entidades.Cliente;
 import com.gvendas.gestaovendas.entidades.ItemVenda;
+import com.gvendas.gestaovendas.entidades.Produto;
 import com.gvendas.gestaovendas.entidades.Venda;
 import com.gvendas.gestaovendas.excecao.RegraNegocioException;
 import com.gvendas.gestaovendas.repositorio.ItemVendaRepositorio;
@@ -23,12 +22,14 @@ public class VendaServico extends AbstractVendaServico{
     private VendaRepositorio vendaRepositorio;
     private ItemVendaRepositorio itemVendaRepositorio;
     private ClienteServico clienteServico;
+    private ProdutoServico produtoServico;
 
     @Autowired
-    public VendaServico(VendaRepositorio vendaRepositorio, ClienteServico clienteServico, ItemVendaRepositorio itemVendaRepositorio) {
+    public VendaServico(VendaRepositorio vendaRepositorio, ClienteServico clienteServico, ItemVendaRepositorio itemVendaRepositorio, ProdutoServico produtoServico) {
         this.vendaRepositorio = vendaRepositorio;
         this.clienteServico = clienteServico;
         this.itemVendaRepositorio = itemVendaRepositorio;
+        this.produtoServico = produtoServico;
     }
 
 
@@ -48,6 +49,24 @@ public class VendaServico extends AbstractVendaServico{
         return new ClienteVendaResponseDTO(venda.getCliente().getNome(), Arrays.asList(criandoVendaResponseDTO(venda, itensVendaLista)));
     }
 
+    public ClienteVendaResponseDTO salvar(Long codigoCliente, VendaRequestDTO vendaDto) {
+        Cliente cliente =  validarClienteVendaExiste(codigoCliente);
+        validarProdutoExiste(vendaDto.getItensVendaDto());
+        Venda vendaSalva = salvarVenda(cliente, vendaDto);
+        return new ClienteVendaResponseDTO(vendaSalva.getCliente().getNome(), Arrays.asList(criandoVendaResponseDTO(vendaSalva, itemVendaRepositorio.findByVendaCodigo(vendaSalva.getCodigo()))));
+    }
+
+    private Venda salvarVenda(Cliente cliente, VendaRequestDTO vendaDto) {
+        Venda vendaSalva = vendaRepositorio.save(new Venda(vendaDto.getData(), cliente));
+        vendaDto.getItensVendaDto().stream().map(itemVendaDto -> criandoItemVenda(itemVendaDto, vendaSalva))
+        .forEach(itemVendaRepositorio::save );
+        return vendaSalva;
+    }
+
+    private void validarProdutoExiste(List<ItemVendaRequestDTO> itensVendaDto) {
+        itensVendaDto.forEach(item -> produtoServico.validarProdutoExiste(item.getCodigoProduto()));
+    }
+
     private Venda validarVendaExiste(Long codigoVenda) {
         Optional<Venda> venda = vendaRepositorio.findById(codigoVenda);
         if (venda.isEmpty()) {
@@ -62,5 +81,9 @@ public class VendaServico extends AbstractVendaServico{
             throw new RegraNegocioException(String.format("O Cliente de código % informdo não existeno cadastro.", codigocliente));
         }
         return cliente.get();
+    }
+
+    private ItemVenda criandoItemVenda(ItemVendaRequestDTO itemVendaDto, Venda venda) {
+        return new ItemVenda(itemVendaDto.getQuantidade(), itemVendaDto.getPrecoVendido(), new Produto(itemVendaDto.getCodigoProduto()), venda);
     }
 }
