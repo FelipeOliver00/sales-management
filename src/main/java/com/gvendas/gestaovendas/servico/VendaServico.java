@@ -32,15 +32,12 @@ public class VendaServico extends AbstractVendaServico{
         this.produtoServico = produtoServico;
     }
 
-
-
     public ClienteVendaResponseDTO listarVendaPorCliente(Long codigocliente) {
         Cliente cliente =  validarClienteVendaExiste(codigocliente);
         List<VendaResponseDTO> vendaResponseDtoList =
         vendaRepositorio.findByClienteCodigo(codigocliente).stream()
                 .map(venda -> criandoVendaResponseDTO(venda, itemVendaRepositorio.findByVendaPorCodigo(venda.getCodigo()))).collect(Collectors.toList());
         return new ClienteVendaResponseDTO(cliente.getNome(), vendaResponseDtoList);
-
     }
 
     public ClienteVendaResponseDTO listarVendaPorCodigo(Long codigoVenda) {
@@ -53,7 +50,7 @@ public class VendaServico extends AbstractVendaServico{
         Cliente cliente =  validarClienteVendaExiste(codigoCliente);
         validarProdutoExiste(vendaDto.getItensVendaDto());
         Venda vendaSalva = salvarVenda(cliente, vendaDto);
-        return new ClienteVendaResponseDTO(vendaSalva.getCliente().getNome(), Arrays.asList(criandoVendaResponseDTO(vendaSalva, itemVendaRepositorio.findByVendaPorCodigo(vendaSalva.getCodigo()))));
+        return retornandoClienteVendaResponseDTO(vendaSalva, itemVendaRepositorio.findByVendaPorCodigo(vendaSalva.getCodigo()));
     }
 
     private Venda salvarVenda(Cliente cliente, VendaRequestDTO vendaDto) {
