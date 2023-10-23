@@ -38,14 +38,14 @@ public class VendaServico extends AbstractVendaServico{
         Cliente cliente =  validarClienteVendaExiste(codigocliente);
         List<VendaResponseDTO> vendaResponseDtoList =
         vendaRepositorio.findByClienteCodigo(codigocliente).stream()
-                .map(venda -> criandoVendaResponseDTO(venda, itemVendaRepositorio.findByVendaCodigo(venda.getCodigo()))).collect(Collectors.toList());
+                .map(venda -> criandoVendaResponseDTO(venda, itemVendaRepositorio.findByVendaPorCodigo(venda.getCodigo()))).collect(Collectors.toList());
         return new ClienteVendaResponseDTO(cliente.getNome(), vendaResponseDtoList);
 
     }
 
     public ClienteVendaResponseDTO listarVendaPorCodigo(Long codigoVenda) {
         Venda venda = validarVendaExiste(codigoVenda);
-        List<ItemVenda> itensVendaLista = itemVendaRepositorio.findByVendaCodigo(venda.getCodigo());
+        List<ItemVenda> itensVendaLista = itemVendaRepositorio.findByVendaPorCodigo(venda.getCodigo());
         return new ClienteVendaResponseDTO(venda.getCliente().getNome(), Arrays.asList(criandoVendaResponseDTO(venda, itensVendaLista)));
     }
 
@@ -53,7 +53,7 @@ public class VendaServico extends AbstractVendaServico{
         Cliente cliente =  validarClienteVendaExiste(codigoCliente);
         validarProdutoExiste(vendaDto.getItensVendaDto());
         Venda vendaSalva = salvarVenda(cliente, vendaDto);
-        return new ClienteVendaResponseDTO(vendaSalva.getCliente().getNome(), Arrays.asList(criandoVendaResponseDTO(vendaSalva, itemVendaRepositorio.findByVendaCodigo(vendaSalva.getCodigo()))));
+        return new ClienteVendaResponseDTO(vendaSalva.getCliente().getNome(), Arrays.asList(criandoVendaResponseDTO(vendaSalva, itemVendaRepositorio.findByVendaPorCodigo(vendaSalva.getCodigo()))));
     }
 
     private Venda salvarVenda(Cliente cliente, VendaRequestDTO vendaDto) {
@@ -78,7 +78,7 @@ public class VendaServico extends AbstractVendaServico{
     private Cliente validarClienteVendaExiste(Long codigocliente) {
         Optional<Cliente> cliente =  clienteServico.buscarPorCodigo(codigocliente);
         if(cliente.isEmpty()) {
-            throw new RegraNegocioException(String.format("O Cliente de código % informdo não existeno cadastro.", codigocliente));
+            throw new RegraNegocioException(String.format("O Cliente de código %s informdo não existeno cadastro.", codigocliente));
         }
         return cliente.get();
     }
