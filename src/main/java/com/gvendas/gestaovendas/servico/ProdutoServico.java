@@ -48,6 +48,10 @@ public class ProdutoServico {
 
     }
 
+    protected void atualizarQuantidadeAposVenda(Produto produto) {
+        produtoRepositorio.save(produto);
+    }
+
     protected Produto validarProdutoExiste(Long codigoProduto) {
         Optional<Produto> produto = produtoRepositorio.findById(codigoProduto);
         if(produto.isEmpty()) {

@@ -10,6 +10,8 @@ import com.gvendas.gestaovendas.repositorio.ItemVendaRepositorio;
 import com.gvendas.gestaovendas.repositorio.VendaRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
@@ -46,9 +48,10 @@ public class VendaServico extends AbstractVendaServico{
         return new ClienteVendaResponseDTO(venda.getCliente().getNome(), Arrays.asList(criandoVendaResponseDTO(venda, itensVendaLista)));
     }
 
+    @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = Exception.class)
     public ClienteVendaResponseDTO salvar(Long codigoCliente, VendaRequestDTO vendaDto) {
         Cliente cliente =  validarClienteVendaExiste(codigoCliente);
-        validarProdutoExiste(vendaDto.getItensVendaDto());
+        validarProdutoExisteEAtualizarQuantidade(vendaDto.getItensVendaDto());
         Venda vendaSalva = salvarVenda(cliente, vendaDto);
         return retornandoClienteVendaResponseDTO(vendaSalva, itemVendaRepositorio.findByVendaPorCodigo(vendaSalva.getCodigo()));
     }
@@ -60,8 +63,21 @@ public class VendaServico extends AbstractVendaServico{
         return vendaSalva;
     }
 
-    private void validarProdutoExiste(List<ItemVendaRequestDTO> itensVendaDto) {
-        itensVendaDto.forEach(item -> produtoServico.validarProdutoExiste(item.getCodigoProduto()));
+    private void validarProdutoExisteEAtualizarQuantidade(List<ItemVendaRequestDTO> itensVendaDto) {
+        itensVendaDto.forEach(item -> {
+            Produto produto = produtoServico.validarProdutoExiste(item.getCodigoProduto());
+            validarQuantidadeProdutoExiste(produto, item.getQuantidade());
+            produto.setQuantidade(produto.getQuantidade() - item.getQuantidade());
+            produtoServico.atualizarQuantidadeAposVenda(produto);
+            
+        });
+    }
+    
+    private void validarQuantidadeProdutoExiste(Produto produto, Integer qtdVendaDto) {
+        if(!(produto.getQuantidade() >= qtdVendaDto)) {
+            throw new RegraNegocioException(String.format("A quantidade %s informada para o produto %s não está disponível em estoque",
+                    qtdVendaDto, produto.getDescricao()));
+        }
     }
 
     private Venda validarVendaExiste(Long codigoVenda) {
