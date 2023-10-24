@@ -55,6 +55,21 @@ public class VendaServico extends AbstractVendaServico{
         Venda vendaSalva = salvarVenda(cliente, vendaDto);
         return retornandoClienteVendaResponseDTO(vendaSalva, itemVendaRepositorio.findByVendaPorCodigo(vendaSalva.getCodigo()));
     }
+    @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = Exception.class)
+    public void deletar(Long codigoVenda) {
+        List<ItemVenda> itensVenda = itemVendaRepositorio.findByVendaPorCodigo(codigoVenda);
+        validarProdutoExisteEDevolverEstoque(itensVenda);
+        itemVendaRepositorio.deleteAll(itensVenda);
+        vendaRepositorio.deleteById(codigoVenda);
+    }
+
+    private void validarProdutoExisteEDevolverEstoque(List<ItemVenda> itensVenda) {
+        itensVenda.forEach(item -> {
+            Produto produto = produtoServico.validarProdutoExiste(item.getProduto().getCodigo());
+            produto.setQuantidade(produto.getQuantidade() + item.getQuantidade());
+            produtoServico.atualizarQuantidadeEmEstoque(produto);
+        });
+    }
 
     private Venda salvarVenda(Cliente cliente, VendaRequestDTO vendaDto) {
         Venda vendaSalva = vendaRepositorio.save(new Venda(vendaDto.getData(), cliente));
@@ -68,7 +83,7 @@ public class VendaServico extends AbstractVendaServico{
             Produto produto = produtoServico.validarProdutoExiste(item.getCodigoProduto());
             validarQuantidadeProdutoExiste(produto, item.getQuantidade());
             produto.setQuantidade(produto.getQuantidade() - item.getQuantidade());
-            produtoServico.atualizarQuantidadeAposVenda(produto);
+            produtoServico.atualizarQuantidadeEmEstoque(produto);
             
         });
     }

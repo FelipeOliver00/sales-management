@@ -32,10 +32,17 @@ public class VendaControlador {
         return ResponseEntity.ok(vendaServico.listarVendaPorCodigo(codigoVenda));
     }
 
-    @ApiOperation(value = "Registrar venda", nickname = "listarVendaPorCodigo")
+    @ApiOperation(value = "Registrar venda", nickname = "salvarVenda")
     @PostMapping("/cliente/{codigoCliente}")
     public ResponseEntity<ClienteVendaResponseDTO> salvar(@PathVariable Long codigoCliente, @Valid @RequestBody VendaRequestDTO vendaDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(vendaServico.salvar(codigoCliente, vendaDto));
+    }
+
+    @ApiOperation(value = "Deletar venda", nickname = "deletarVenda")
+    @DeleteMapping("/{codigoVenda}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long codigoVenda) {
+        vendaServico.deletar(codigoVenda);
     }
 
 }
