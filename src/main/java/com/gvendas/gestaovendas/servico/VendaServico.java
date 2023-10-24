@@ -55,6 +55,18 @@ public class VendaServico extends AbstractVendaServico{
         Venda vendaSalva = salvarVenda(cliente, vendaDto);
         return retornandoClienteVendaResponseDTO(vendaSalva, itemVendaRepositorio.findByVendaPorCodigo(vendaSalva.getCodigo()));
     }
+
+    public ClienteVendaResponseDTO atualizar(Long codigoVenda, Long codigoCliente, VendaRequestDTO vendaDto) {
+        validarVendaExiste(codigoVenda);
+        Cliente cliente =  validarClienteVendaExiste(codigoCliente);
+        List<ItemVenda> itensVendaList =  itemVendaRepositorio.findByVendaPorCodigo(codigoVenda);
+        validarProdutoExisteEDevolverEstoque(itensVendaList);
+        validarProdutoExisteEAtualizarQuantidade(vendaDto.getItensVendaDto());
+        itemVendaRepositorio.deleteAll(itensVendaList);
+        Venda vendaAtualizada = atualizarVenda(codigoVenda, cliente, vendaDto);
+        return retornandoClienteVendaResponseDTO(vendaAtualizada, itemVendaRepositorio.findByVendaPorCodigo(vendaAtualizada.getCodigo()));
+
+    }
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = Exception.class)
     public void deletar(Long codigoVenda) {
         List<ItemVenda> itensVenda = itemVendaRepositorio.findByVendaPorCodigo(codigoVenda);
@@ -75,6 +87,13 @@ public class VendaServico extends AbstractVendaServico{
         Venda vendaSalva = vendaRepositorio.save(new Venda(vendaDto.getData(), cliente));
         vendaDto.getItensVendaDto().stream().map(itemVendaDto -> criandoItemVenda(itemVendaDto, vendaSalva))
         .forEach(itemVendaRepositorio::save );
+        return vendaSalva;
+    }
+
+    private Venda atualizarVenda(Long codigoVenda, Cliente cliente, VendaRequestDTO vendaDto) {
+        Venda vendaSalva = vendaRepositorio.save(new Venda(codigoVenda, vendaDto.getData(), cliente));
+        vendaDto.getItensVendaDto().stream().map(itemVendaDto -> criandoItemVenda(itemVendaDto, vendaSalva))
+                .forEach(itemVendaRepositorio::save );
         return vendaSalva;
     }
 

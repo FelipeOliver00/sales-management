@@ -38,6 +38,13 @@ public class VendaControlador {
         return ResponseEntity.status(HttpStatus.CREATED).body(vendaServico.salvar(codigoCliente, vendaDto));
     }
 
+    @ApiOperation(value = "Atualizar venda", nickname = "atualizarVenda")
+    @PutMapping("/{codigoVenda}/cliente/{codigoCliente}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public ResponseEntity<ClienteVendaResponseDTO> atualizar(@PathVariable Long codigoVenda, @PathVariable Long codigoCliente, @Valid @RequestBody VendaRequestDTO vendaDto) {
+        return ResponseEntity.ok(vendaServico.atualizar(codigoVenda, codigoCliente, vendaDto));
+    }
+
     @ApiOperation(value = "Deletar venda", nickname = "deletarVenda")
     @DeleteMapping("/{codigoVenda}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
